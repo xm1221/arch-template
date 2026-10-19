@@ -1,16 +1,30 @@
 # Vendoring Architectury official templates
 
-Maintained custom bases: `templates/1.20.1`, `templates/1.21.1`.
+Maintained custom bases stay in `templates/1.20.1` and `templates/1.21.1`. The web dropdown lists those as 「维护底模」 / Maintained.
 
-For **other** Minecraft versions, ingest Architectury official templates so users still download a ready project from us (never “just a link”).
+Other Minecraft versions that the official generator knows about are vendored under `templates/arch-official/<mc>/` and show up as 「Arch 官方模板」 / Arch official. The form still posts `base` to `generateZip`. It does not open an upstream link.
 
-## Steps
+## Refresh
 
-1. Clone or download https://github.com/architectury/architectury-templates (or run their generator for the target MC version).
-2. Copy the dual-platform tree into `templates/arch-official/<mc-version>/`.
-3. Normalize to placeholders: `__MOD_ID__`, `__PACKAGE_NAME__`, `__PACKAGE_PATH__`, `__DISPLAY_NAME__`, `__MOD_VERSION__`, `__MOD_CLASS__`.
-4. Add `template.json` (see `templates/1.20.1/template.json`).
-5. Ensure `icon.png` matches fabric.mod.json / mods.toml.
-6. Run `npm test` and generate a zip against the new base.
+```bash
+node scripts/vendor-arch-official.mjs
+```
 
-Prefer vendored snapshots for CI/offline; fetch+cache can come later.
+The script reads the version list from [architectury/architectury-templates](https://github.com/architectury/architectury-templates) `master` `generator.config.json`, entries named `<mc>-forge-fabric`. That file stops at 1.20.1. Maintained ids are not copied. 1.21+ NeoForge is not in that generator.
+
+Each tree is the placeholder skeleton (same shape as `templates/arch-official/1.19.2`) with `template.json` pins for that Minecraft version. This is a normalized snapshot, not a byte-for-byte Loom export. Pins and the upstream key are recorded in each directory's README.
+
+Currently vendored:
+
+| id | upstream key |
+| --- | --- |
+| 1.16.5 | `1.16.5-forge-fabric` |
+| 1.17.1 | `1.17.1-forge-fabric` |
+| 1.18.1 | `1.18.1-forge-fabric` |
+| 1.18.2 | `1.18.2-forge-fabric` |
+| 1.19 | `1.19-forge-fabric` |
+| 1.19.2 | `1.19.2-forge-fabric` |
+| 1.19.3 | `1.19.3-forge-fabric` |
+| 1.19.4 | `1.19.4-forge-fabric` |
+
+After adding or refreshing a version, run `npm test` and `npm run web:smoke`. `listBases()` picks up every directory, so the dropdown follows the filesystem.

@@ -1,0 +1,35 @@
+{
+  "name": "arch-template-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "embed": "tsx scripts/embed-fs.ts",
+    "dev": "tsx scripts/dev.ts",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "build": "vite build",
+    "build:worker": "tsx scripts/embed-fs.ts && tsx scripts/build-worker.ts && vite build",
+    "build:pages": "npm run build:worker && tsx scripts/prepare-pages.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "typecheck": "tsx scripts/embed-fs.ts && tsc --noEmit",
+    "deploy": "npm run build:worker && wrangler deploy",
+    "deploy:pages": "npm run build:pages && wrangler pages deploy dist --project-name arch-template --commit-dirty=true --no-bundle --config wrangler.pages.toml"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.0",
+    "arch-template": "file:..",
+    "hono": "^4.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "esbuild": "^0.25.0",
+    "jszip": "^3.10.1",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.3.0",
+    "wrangler": "^4.20.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

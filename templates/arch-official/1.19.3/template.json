@@ -1,0 +1,14 @@
+{
+  "id": "1.19.3",
+  "minecraft": "1.19.3",
+  "platforms": [
+    "fabric",
+    "forge"
+  ],
+  "java": 17,
+  "architectury": "7.1.81",
+  "fabricLoader": "0.14.22",
+  "fabricApi": "0.76.1+1.19.3",
+  "kotlinFabric": "1.10.10+kotlin.1.9.10",
+  "kotlinForge": "3.12.0"
+}
