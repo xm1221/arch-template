@@ -1,0 +1,17 @@
+{
+  "displayName": "Example Mod",
+  "modId": "examplemod",
+  "mavenGroup": "cn.example.examplemod",
+  "modVersion": "0.1.0",
+  "base": "1.20.1",
+  "kotlin": true,
+  "recipes": {
+    "hexdoc": false,
+    "hexCastingAddon": false
+  },
+  "dependencies": [],
+  "mirrors": {
+    "enabled": false,
+    "preset": "none"
+  }
+}

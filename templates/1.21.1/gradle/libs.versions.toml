@@ -1,0 +1,21 @@
+[versions]
+minecraft = "__MC_VERSION__"
+architectury = "__ARCHITECTURY__"
+fabric-loader = "__FABRIC_LOADER__"
+fabric-api = "__FABRIC_API__"
+neoforge = "21.1.0"
+kotlin = "2.0.21"
+kotlin-fabric = "__KOTLIN_FABRIC__"
+kotlin-forge = "__KOTLIN_FORGE__"
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+architectury = { module = "dev.architectury:architectury", version.ref = "architectury" }
+architectury-fabric = { module = "dev.architectury:architectury-fabric", version.ref = "architectury" }
+architectury-neoforge = { module = "dev.architectury:architectury-neoforge", version.ref = "architectury" }
+fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
+fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric-api" }
+neoforge = { module = "net.neoforged:neoforge", version.ref = "neoforge" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlin-fabric = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "kotlin-fabric" }
+kotlin-forge = { module = "thedarkcolour:kotlinforforge-neoforge", version.ref = "kotlin-forge" }

@@ -1,0 +1,6 @@
+# hexdoc stub — pattern stub required=false
+[hexdoc]
+props = "resources"
+
+[hexdoc.pattern]
+required = false

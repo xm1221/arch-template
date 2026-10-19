@@ -1,0 +1,24 @@
+{
+  "displayName": "Hex Example",
+  "modId": "hexexample",
+  "mavenGroup": "cn.example.hexexample",
+  "modVersion": "0.1.0",
+  "base": "1.20.1",
+  "kotlin": true,
+  "recipes": {
+    "hexdoc": true,
+    "hexCastingAddon": true
+  },
+  "dependencies": [
+    {
+      "source": "modrinth",
+      "project": "hex-casting",
+      "version": "0.11.4",
+      "depType": "required"
+    }
+  ],
+  "mirrors": {
+    "enabled": true,
+    "preset": "cn-campus"
+  }
+}

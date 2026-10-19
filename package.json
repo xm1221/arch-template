@@ -3,12 +3,35 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "templates",
+    "presets"
+  ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests 2>/dev/null || node --test test/*.test.js",
+    "build": "tsc",
+    "test": "npm run build && node --test dist/test/core.test.js",
     "generate": "node dist/cli.js"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">=20"
+  },
+  "bin": {
+    "arch-template": "dist/cli.js"
   }
 }

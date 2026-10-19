@@ -33,7 +33,12 @@ Generate a downloadable Architectury dual-platform Minecraft mod project ZIP fro
   ],
   "mirrors": { "enabled": false, "preset": "cn-campus" | "none" },
   "presetId": optional string,
-  "icon": optional { "pngBase64": "..." } | omitted
+  "icon": {
+    "enabled": true,
+    "path": "optional local PNG path (CLI)",
+    "base64": "optional raw base64 or data:image/png;base64,...",
+    "pngBase64": "alias of base64"
+  }  // omit or enabled:false → template default placeholder icon.png
 }
 ```
 
@@ -46,9 +51,10 @@ Generate a downloadable Architectury dual-platform Minecraft mod project ZIP fro
    - else `maven.modrinth:<slug>:<version>` + exclusiveContent Modrinth repo
    - also emit fabric.mod.json / mods.toml / neoforge depends snippets when files exist
 5. **mirrors** — optional `gradle/init-mirrors.gradle` or documented `dependencyResolutionManagement` snippet for CN mirrors (Aliyun/Tencent/Huawei/BFSU) for mavenCentral + plugin portal only; never blindly mirror Forge/Fabric exclusive repos
-6. **presets** — `presets/*.json` examples: `plain-1.20.1-kt`, `hex-addon-1.20.1-kt`, `plain-1.21.1-java`
-7. **zip** — Node API `generateZip(options) => Buffer` + CLI `node dist/cli.js --config opts.json -o out.zip`
-8. **tests** — at least: validate modId; placeholder replace; MR URL builder / override map; zip contains `settings.gradle.kts` and replaced modId
+6. **icon** — optional mod icon: when `icon.enabled` and path/base64 provided, write standard `icon.png` into resources (Fabric `assets/__MOD_ID__/icon.png` or wherever fabric.mod.json/`mods.toml`/`neoforge.mods.toml` reference — match the chosen base). Validate PNG magic bytes; size limit ≤512KB (hard fail over limit). Non-square: allow with a warning string returned in generate metadata / documented in README. When omitted or disabled, keep template default placeholder icon (or embed a tiny solid PNG).
+7. **presets** — `presets/*.json` examples: `plain-1.20.1-kt`, `hex-addon-1.20.1-kt`, `plain-1.21.1-java`
+8. **zip** — Node API `generateZip(options) => Buffer` + CLI `node dist/cli.js --config opts.json -o out.zip`
+9. **tests** — at least: validate modId; placeholder replace; MR URL builder / override map; zip contains `settings.gradle.kts` and replaced modId
 
 ## Stack
 - TypeScript (Node 20+), zero or minimal deps (prefer `jszip` + `undici`/fetch)
