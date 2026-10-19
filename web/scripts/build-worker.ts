@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import * as esbuild from "esbuild";
@@ -22,6 +22,32 @@ const shimPlugin: esbuild.Plugin = {
     }));
   },
 };
+
+/** Cloudflare evaluates the Worker module on upload; top-level `new URL(..., import.meta.url)` can throw. */
+async function neutralizeImportMetaPaths(outfile: string): Promise<void> {
+  let code = await readFile(outfile, "utf8");
+  const pairs: Array<[RegExp, string]> = [
+    [/fileURLToPath\(new URL\("\.\.\/templates", import\.meta\.url\)\)/g, '"/templates"'],
+    [/fileURLToPath\(new URL\("\.\.\/presets", import\.meta\.url\)\)/g, '"/presets"'],
+    [/fileURLToPath\(new URL\("\.\.\/\.\.\/presets", import\.meta\.url\)\)/g, '"/presets"'],
+    [/fileURLToPath\(new URL\('\.\.\/templates', import\.meta\.url\)\)/g, '"/templates"'],
+    [/fileURLToPath\(new URL\('\.\.\/presets', import\.meta\.url\)\)/g, '"/presets"'],
+    [/fileURLToPath\(new URL\('\.\.\/\.\.\/presets', import\.meta\.url\)\)/g, '"/presets"'],
+  ];
+  let hits = 0;
+  for (const [re, rep] of pairs) {
+    code = code.replace(re, () => {
+      hits += 1;
+      return rep;
+    });
+  }
+  if (hits === 0) {
+    console.warn("neutralizeImportMetaPaths: no import.meta.url path literals found");
+  } else {
+    console.log(`neutralizeImportMetaPaths: rewrote ${hits} path literal(s)`);
+  }
+  await writeFile(outfile, code);
+}
 
 export async function buildWorkerBundle(outfile = resolve(webRoot, "dist-worker/index.js")): Promise<string> {
   await mkdir(resolve(webRoot, "dist-worker"), { recursive: true });
@@ -54,6 +80,7 @@ export async function buildWorkerBundle(outfile = resolve(webRoot, "dist-worker/
     ],
     logLevel: "info",
   });
+  await neutralizeImportMetaPaths(outfile);
   return outfile;
 }
 
