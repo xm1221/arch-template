@@ -24,6 +24,7 @@ export interface GenerateOptionsJson {
   mirrors: {
     enabled: boolean;
     preset: "cn-campus" | "none";
+    gradleWrapper?: "official" | "tencent";
   };
   presetId?: string;
   icon?: {
@@ -54,6 +55,7 @@ export interface PresetSummary {
   mirrors: {
     enabled: boolean;
     preset?: "cn-campus" | "none";
+    gradleWrapper?: "official" | "tencent";
   };
   dependencyCount: number;
 }
@@ -100,6 +102,7 @@ export interface FormState {
   hexdoc: boolean;
   hexCastingAddon: boolean;
   mirrorsEnabled: boolean;
+  gradleWrapperTencent: boolean;
   dependencies: DependencyDraft[];
   icon: IconDraft | null;
   presetId?: string;

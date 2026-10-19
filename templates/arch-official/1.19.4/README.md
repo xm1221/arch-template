@@ -19,7 +19,7 @@ CN mirrors (if present):
 Merge `gradle/arch-template-deps.gradle.kts` into build files when present.
 
 
-> Normalized skeleton for the Architectury official `1.19.4-forge-fabric` generator entry
+> Normalized skeleton for the Architectury official `1.19.2-forge-fabric` generator entry
 > (architectury/architectury-templates, master). generateZip ingests this tree locally.
 > Pins are snapshots for the skeleton, not a live Loom export. Refresh with
 > `node scripts/vendor-arch-official.mjs`.

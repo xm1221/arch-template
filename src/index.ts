@@ -23,7 +23,12 @@ export {
   buildGradleDeps,
   fetchCurseForgeProject,
 } from "./modrinth.js";
-export { buildInitMirrorsGradle } from "./mirrors.js";
+export {
+  buildInitMirrorsGradle,
+  resolveGradleDistributionUrl,
+  escapeGradleDistributionUrl,
+  DEFAULT_GRADLE_VERSION,
+} from "./mirrors.js";
 export { resolveIconBytes, MAX_ICON_BYTES } from "./icon.js";
 export { listBases, resolveBaseDir, DEFAULT_TEMPLATES_ROOT } from "./templates.js";
 export { generateZip, loadPreset } from "./generate.js";

@@ -24,7 +24,7 @@
         </div>
         <h1 data-i18n="app.title">Architectury 模组模板</h1>
         <p class="lede" data-i18n="app.lede">
-          填好项目信息，下载一份能直接打开的双平台工程。选项在这里整理，压缩包由服务端的 generateZip 生成。
+          填好项目信息，下载一份可直接打开的双平台模组工程。
         </p>
       </header>
 
@@ -32,13 +32,13 @@
         <section class="card" aria-labelledby="preset-heading">
           <div class="section-head">
             <h2 id="preset-heading" data-i18n="preset.title">预设</h2>
-            <p data-i18n="preset.note">三个自带预设可以直接填入表单。也可以把当前内容导出成 JSON，以后再导入。</p>
+            <p data-i18n="preset.note">三个自带预设可以直接填入表单。也可以把当前内容导出，以后再导入。</p>
           </div>
           <div id="preset-list" class="choice-grid presets"></div>
           <p id="preset-status" class="hint" data-i18n="preset.loading">正在读取预设…</p>
           <div class="button-row">
-            <button type="button" class="button-secondary" id="export-button" data-i18n="preset.export">导出预设 JSON</button>
-            <button type="button" class="button-secondary" id="import-button" data-i18n="preset.import">导入预设 JSON</button>
+            <button type="button" class="button-secondary" id="export-button" data-i18n="preset.export">导出预设</button>
+            <button type="button" class="button-secondary" id="import-button" data-i18n="preset.import">导入预设</button>
             <input id="import-file" type="file" accept="application/json,.json" hidden />
           </div>
         </section>
@@ -81,14 +81,14 @@
               <input id="kotlin" type="checkbox" />
               <span>
                 <span class="check-title" data-i18n="kotlin.title">使用 Kotlin</span>
-                <span class="hint" data-i18n="kotlin.hint">勾选后保留 Kotlin 源文件，并去掉对应的 Java 桩。</span>
+                <span class="hint" data-i18n="kotlin.hint">勾选后保留 Kotlin 源文件，并去掉对应的 Java 模板文件。</span>
               </span>
             </label>
           </div>
 
           <div class="subhead">
             <h3 id="base-heading" data-i18n="base.title">Minecraft 版本</h3>
-            <p data-i18n="base.note">「维护底模」由本仓库持续更新。「Arch 官方模板」来自已收录的 Architectury 官方生成器条目，走同一套 generateZip，不会只给一个外链。</p>
+            <p data-i18n="base.note">「维护底模」适合常用版本；「Arch 官方模板」覆盖更多 Minecraft 版本。选中后都会生成完整工程，不只是跳转链接。</p>
           </div>
           <div class="field base-field">
             <label for="base" data-i18n="base.label">选择版本</label>
@@ -109,14 +109,14 @@
               <input id="hexdoc" type="checkbox" />
               <span>
                 <span class="check-title" data-i18n="hexdoc.title">hexdoc 文档</span>
-                <span class="hint" data-i18n="hexdoc.hint">带上 doc/ 目录。hexdoc 依赖按可选配方写入（required = false）。</span>
+                <span class="hint" data-i18n="hexdoc.hint">带上文档目录，并把 hexdoc 写成可选依赖。</span>
               </span>
             </label>
             <label class="check">
               <input id="hexCastingAddon" type="checkbox" />
               <span>
-                <span class="check-title" data-i18n="hexAddon.title">Hex Casting 附属</span>
-                <span class="hint" data-i18n="hexAddon.hint">如果依赖列表里还没有 Hex Casting，生成时会尝试补上。主要面向 1.20.1。</span>
+                <span class="check-title" data-i18n="hexAddon.title">咒法学（Hex Casting）附属</span>
+                <span class="hint" data-i18n="hexAddon.hint">生成的工程会带上咒法学本体作为前置依赖（Fabric / Forge）。适合做 1.20.1 附属模组。</span>
               </span>
             </label>
             <label class="check">
@@ -124,6 +124,13 @@
               <span>
                 <span class="check-title" data-i18n="mirrors.title">国内校园网 Maven 镜像（cn-campus）</span>
                 <span class="hint" data-i18n="mirrors.hint">只镜像 Maven Central 和 Gradle Plugin Portal，不会替换 Fabric / Forge 专用仓库。</span>
+              </span>
+            </label>
+            <label class="check">
+              <input id="gradleWrapperTencent" type="checkbox" />
+              <span>
+                <span class="check-title" data-i18n="gradleWrapper.title">用腾讯云镜像下载 Gradle</span>
+                <span class="hint" data-i18n="gradleWrapper.hint">首次打开工程时，Gradle 本体从腾讯云镜像拉取，国内一般更快。和上面的 Maven 依赖镜像互不影响。</span>
               </span>
             </label>
           </div>
@@ -179,14 +186,14 @@
           <div id="status" class="status" role="status"></div>
           <ul id="warnings" class="warnings" hidden></ul>
           <details class="json-details">
-            <summary data-i18n="generate.json">查看将提交的 JSON</summary>
+            <summary data-i18n="generate.json">查看将提交的选项</summary>
             <pre id="json-preview"></pre>
           </details>
         </section>
       </form>
 
       <footer class="site-footer">
-        <p data-i18n="app.footer">引擎与模板来自 arch-template。CurseForge 未支持。</p>
+        <p data-i18n="app.footer">由 arch-template 提供。CurseForge 暂不支持。</p>
       </footer>
     </main>
     <script type="module" src="/src/main.ts"></script>

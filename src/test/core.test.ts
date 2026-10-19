@@ -96,8 +96,8 @@ describe("generateZip", () => {
     assert.ok(buffer.length > 100);
     const zip = await JSZip.loadAsync(buffer);
     const names = Object.keys(zip.files);
-    assert.ok(names.some((n) => n.endsWith("settings.gradle.kts")));
-    const settings = await zip.file("examplemod/settings.gradle.kts")!.async("string");
+    assert.ok(names.some((n) => n.endsWith("settings.gradle")));
+    const settings = await zip.file("examplemod/settings.gradle")!.async("string");
     assert.match(settings, /rootProject\.name = "examplemod"/);
     assert.ok(names.some((n) => n.includes("examplemod") && n.endsWith(".kt")));
     assert.ok(!names.some((n) => n.includes("/src/main/java/") && n.endsWith(".java")));
@@ -131,8 +131,55 @@ describe("generateZip", () => {
     };
     const { buffer } = await generateZip(opts);
     const zip = await JSZip.loadAsync(buffer);
-    const settings = await zip.file("archstub/settings.gradle.kts")!.async("string");
+    const settings = await zip.file("archstub/settings.gradle")!.async("string");
     assert.match(settings, /archstub/);
     assert.ok(Object.keys(zip.files).some((n) => n.endsWith(".java")));
   });
 });
+
+describe("gradle completeness", () => {
+  it("1.20.1 zip includes runClient via loom fabric/forge setup and wrapper URL", async () => {
+    const opts = await loadPreset("plain-1.20.1-kt");
+    const { buffer } = await generateZip(opts);
+    const zip = await JSZip.loadAsync(buffer);
+    const fabric = await zip.file("examplemod/fabric/build.gradle")!.async("string");
+    const forge = await zip.file("examplemod/forge/build.gradle")!.async("string");
+    assert.match(fabric, /platformSetupLoomIde/);
+    assert.match(fabric, /fabric\(\)/);
+    assert.match(forge, /forge\(\)/);
+    // Explicit loom runs — Gradle task runClient / IDE "Fabric Client"
+    assert.match(fabric, /runs\s*\{[\s\S]*client\s*\{/);
+    assert.match(fabric, /setConfigName\("Fabric Client"\)/);
+    assert.match(forge, /setConfigName\("Forge Client"\)/);
+    assert.doesNotMatch(fabric, /placeholder/i);
+    const wrapper = await zip.file("examplemod/gradle/wrapper/gradle-wrapper.properties")!.async("string");
+    assert.match(wrapper, /services\.gradle\.org\/distributions\/gradle-8\.4-bin\.zip/);
+    assert.ok(zip.file("examplemod/gradlew"));
+  });
+
+  it("tencent gradle wrapper mirror rewrites distributionUrl", async () => {
+    const opts = await loadPreset("plain-1.20.1-kt");
+    opts.mirrors = { enabled: false, preset: "none", gradleWrapper: "tencent" };
+    const { buffer } = await generateZip(opts);
+    const zip = await JSZip.loadAsync(buffer);
+    const wrapper = await zip.file("examplemod/gradle/wrapper/gradle-wrapper.properties")!.async("string");
+    assert.match(wrapper, /mirrors\.cloud\.tencent\.com\/gradle\/gradle-8\.4-bin\.zip/);
+  });
+
+  it("hex-addon preset injects Hex Casting into fabric/forge gradle deps", async () => {
+    const opts = await loadPreset("hex-addon-1.20.1-kt");
+    const { buffer } = await generateZip(opts);
+    const zip = await JSZip.loadAsync(buffer);
+    const common = await zip.file("hexexample/common/build.gradle")!.async("string");
+    const fabric = await zip.file("hexexample/fabric/build.gradle")!.async("string");
+    const forge = await zip.file("hexexample/forge/build.gradle")!.async("string");
+    assert.match(common, /hexcasting-common-1\.20\.1/);
+    assert.match(fabric, /hexcasting-fabric-1\.20\.1/);
+    assert.match(forge, /hexcasting-forge-1\.20\.1/);
+    const root = await zip.file("hexexample/build.gradle")!.async("string");
+    assert.match(root, /maven\.hexxy\.media|maven\.blamejared\.com/);
+    const fabricMod = await zip.file("hexexample/fabric/src/main/resources/fabric.mod.json")!.async("string");
+    assert.match(fabricMod, /hexcasting/);
+  });
+});
+

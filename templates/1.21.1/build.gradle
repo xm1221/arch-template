@@ -1,0 +1,67 @@
+plugins {
+    id "architectury-plugin" version "3.4-SNAPSHOT"
+    id "dev.architectury.loom" version "1.7-SNAPSHOT" apply false
+    // __KOTLIN_ONLY__
+    id "org.jetbrains.kotlin.jvm" version "2.0.21" apply false
+    // __END_KOTLIN_ONLY__
+}
+
+architectury {
+    minecraft = rootProject.minecraft_version
+}
+
+subprojects {
+    apply plugin: "dev.architectury.loom"
+    // __KOTLIN_ONLY__
+    apply plugin: "org.jetbrains.kotlin.jvm"
+    // __END_KOTLIN_ONLY__
+
+    loom {
+        silentMojangMappingsLicense()
+    }
+
+    dependencies {
+        minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+        mappings loom.officialMojangMappings()
+    }
+}
+
+allprojects {
+    apply plugin: "java"
+    apply plugin: "architectury-plugin"
+    apply plugin: "maven-publish"
+
+    base {
+        archivesName = rootProject.archives_base_name
+    }
+
+    version = rootProject.mod_version
+    group = rootProject.maven_group
+
+    repositories {
+        mavenCentral()
+        maven { url "https://maven.fabricmc.net/" }
+        maven { url "https://maven.architectury.dev/" }
+        maven { url "https://maven.neoforged.net/releases/" }
+        maven { url "https://thedarkcolour.github.io/KotlinForForge/" }
+        maven { url "https://maven.blamejared.com/" }
+        // __ARCH_TEMPLATE_REPOS__
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = "UTF-8"
+        options.release = 21
+    }
+
+    // __KOTLIN_ONLY__
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "21"
+        }
+    }
+    // __END_KOTLIN_ONLY__
+
+    java {
+        withSourcesJar()
+    }
+}

@@ -16,6 +16,8 @@ export interface DependencyOptions {
 export interface MirrorsOptions {
   enabled: boolean;
   preset?: "cn-campus" | "none";
+  /** Gradle Wrapper distribution mirror. Default: official services.gradle.org. */
+  gradleWrapper?: "official" | "tencent";
 }
 
 export interface RecipesOptions {

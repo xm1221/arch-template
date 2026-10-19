@@ -81,6 +81,7 @@ const kotlin = required<HTMLInputElement>("kotlin");
 const hexdoc = required<HTMLInputElement>("hexdoc");
 const hexCastingAddon = required<HTMLInputElement>("hexCastingAddon");
 const mirrors = required<HTMLInputElement>("mirrors");
+const gradleWrapperTencent = required<HTMLInputElement>("gradleWrapperTencent");
 const presetList = required<HTMLDivElement>("preset-list");
 const presetStatus = required<HTMLParagraphElement>("preset-status");
 const baseSelect = required<HTMLSelectElement>("base");
@@ -141,6 +142,7 @@ function syncFromDom(): void {
   state.hexdoc = hexdoc.checked;
   state.hexCastingAddon = hexCastingAddon.checked;
   state.mirrorsEnabled = mirrors.checked;
+  state.gradleWrapperTencent = gradleWrapperTencent.checked;
   if (baseSelect.value) state.base = baseSelect.value;
   syncDepsFromDom();
 }
@@ -563,6 +565,7 @@ function writeForm(): void {
   hexdoc.checked = state.hexdoc;
   hexCastingAddon.checked = state.hexCastingAddon;
   mirrors.checked = state.mirrorsEnabled;
+  gradleWrapperTencent.checked = state.gradleWrapperTencent;
   baseSelect.value = state.base;
   renderBaseDetail();
   clearFieldErrors();

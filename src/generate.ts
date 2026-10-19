@@ -11,7 +11,11 @@ import {
   replacePath,
 } from "./apply.js";
 import { resolveIconBytes } from "./icon.js";
-import { buildInitMirrorsGradle } from "./mirrors.js";
+import {
+  buildInitMirrorsGradle,
+  escapeGradleDistributionUrl,
+  resolveGradleDistributionUrl,
+} from "./mirrors.js";
 import {
   buildGradleDeps,
   fetchProject,
@@ -145,6 +149,47 @@ ${plan.dependencies.neoforge.map((d) => `//   ${d}`).join("\n") || "//   (none)"
 `;
 }
 
+
+function formatInjectedLines(lines: string[], indent: string): string {
+  if (!lines.length) return "";
+  return lines
+    .map((line) =>
+      line
+        .split("\n")
+        .map((part) => `${indent}${part}`)
+        .join("\n"),
+    )
+    .join("\n");
+}
+
+/**
+ * Replace a whole line that contains an __ARCH_TEMPLATE_*__ marker.
+ * Indent of the injected block follows the marker line's leading whitespace.
+ */
+function replaceMarkerLine(text: string, marker: string, lines: string[]): string {
+  const re = new RegExp(`^([ \t]*).*${marker}.*$`, "m");
+  const match = text.match(re);
+  if (!match) {
+    return text.split(marker).join(formatInjectedLines(lines, "    "));
+  }
+  const indent = match[1] ?? "    ";
+  const replacement = formatInjectedLines(lines, indent);
+  return text.replace(re, replacement === "" ? "" : replacement);
+}
+
+/** Replace __ARCH_TEMPLATE_*__ markers in Gradle files with resolved deps/repos. */
+function injectDepMarkers(text: string, plan: GradleDepPlan): string {
+  let out = text;
+  out = replaceMarkerLine(out, "__ARCH_TEMPLATE_REPOS__", plan.repositories);
+  out = replaceMarkerLine(out, "__ARCH_TEMPLATE_COMMON_DEPS__", plan.dependencies.common);
+  out = replaceMarkerLine(out, "__ARCH_TEMPLATE_FABRIC_DEPS__", plan.dependencies.fabric);
+  out = replaceMarkerLine(out, "__ARCH_TEMPLATE_FORGE_DEPS__", plan.dependencies.forge);
+  out = replaceMarkerLine(out, "__ARCH_TEMPLATE_NEOFORGE_DEPS__", plan.dependencies.neoforge);
+  // Drop leftover blank lines created by empty markers
+  out = out.replace(/\n{3,}/g, "\n\n");
+  return out;
+}
+
 function patchFabricDepends(jsonText: string, plan: GradleDepPlan): string {
   try {
     const data = JSON.parse(jsonText) as { depends?: Record<string, string> };
@@ -200,6 +245,8 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
 
   const recipes = options.recipes ?? {};
   const placeholders = buildPlaceholderMap(options, baseInfo.meta);
+  const wrapperUrl = resolveGradleDistributionUrl(options.mirrors?.gradleWrapper);
+  placeholders.__GRADLE_DISTRIBUTION_URL__ = escapeGradleDistributionUrl(wrapperUrl);
   const icon = await resolveIconBytes(options.icon);
   warnings.push(...icon.warnings);
 
@@ -270,6 +317,9 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
       let text = bytes.toString("utf8");
       text = applyConditionals(text, options.kotlin);
       text = expandPlaceholders(text, placeholders);
+      if (rel.endsWith(".gradle") || rel.endsWith(".gradle.kts") || rel.endsWith(".properties")) {
+        text = injectDepMarkers(text, depPlan);
+      }
 
       if (rel.endsWith("fabric.mod.json") && depPlan.metadata.length) {
         text = patchFabricDepends(text, {

@@ -108,6 +108,12 @@ export function validateOptions(options: GenerateOptions): void {
     ) {
       throw new ValidationError('mirrors.preset must be "cn-campus" or "none"');
     }
+    if (
+      options.mirrors.gradleWrapper !== undefined &&
+      !["official", "tencent"].includes(options.mirrors.gradleWrapper)
+    ) {
+      throw new ValidationError('mirrors.gradleWrapper must be "official" or "tencent"');
+    }
   }
 
   if (options.icon !== undefined) {

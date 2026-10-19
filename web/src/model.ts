@@ -36,6 +36,7 @@ export function defaultFormState(): FormState {
     hexdoc: false,
     hexCastingAddon: false,
     mirrorsEnabled: false,
+    gradleWrapperTencent: false,
     dependencies: [],
     icon: null,
   };
@@ -111,6 +112,7 @@ export function toGenerateOptions(state: FormState): GenerateOptionsJson {
     mirrors: {
       enabled: state.mirrorsEnabled,
       preset: state.mirrorsEnabled ? "cn-campus" : "none",
+      gradleWrapper: state.gradleWrapperTencent ? "tencent" : "official",
     },
   };
   if (state.presetId) options.presetId = state.presetId;
@@ -242,6 +244,7 @@ export function parsePresetJson(value: unknown):
     hexdoc: Boolean(recipes.hexdoc),
     hexCastingAddon: Boolean(recipes.hexCastingAddon),
     mirrorsEnabled: mirrors.enabled === true && mirrors.preset !== "none",
+    gradleWrapperTencent: mirrors.gradleWrapper === "tencent",
     dependencies,
     icon,
     presetId: typeof value.presetId === "string" && value.presetId.trim() !== "" ? value.presetId.trim() : undefined,

@@ -1,0 +1,27 @@
+architectury {
+    common(rootProject.enabled_platforms.split(","))
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/__MOD_ID__.accesswidener")
+}
+
+dependencies {
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
+    modApi "dev.architectury:architectury:${rootProject.architectury_version}"
+    // __KOTLIN_ONLY__
+    modImplementation "net.fabricmc:fabric-language-kotlin:${rootProject.kotlin_fabric_version}"
+    // __END_KOTLIN_ONLY__
+    // __ARCH_TEMPLATE_COMMON_DEPS__
+}
+
+publishing {
+    publications {
+        mavenCommon(MavenPublication) {
+            artifactId = rootProject.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+    }
+}
