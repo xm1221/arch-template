@@ -15,7 +15,7 @@ routes = [{ pattern = "tools.xm1221.cn/arch-template*", zone_name = "xm1221.cn" 
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
-run_worker_first = ["/api/*", "/arch-template/api/*"]
+run_worker_first = true
 
 [vars]
 # Same-origin hosting does not need this. Set it when GitHub Pages calls this Worker.
