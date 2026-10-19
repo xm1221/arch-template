@@ -184,6 +184,16 @@ function clearFieldErrors(): void {
   showErrors({});
 }
 
+function refreshFieldErrors(): void {
+  if (!hasErrors(fieldErrors)) return;
+  const errors = validateForm(state, baseIds());
+  if (!basesReady && fieldErrors.form) errors.form = fieldErrors.form;
+  showErrors(errors);
+  if (!hasErrors(errors) && (statusState.key === "generate.invalid" || statusState.key === "preset.exportInvalid")) {
+    setStatus({ kind: "idle" });
+  }
+}
+
 function renderStatus(): void {
   const parts: string[] = [];
   if (statusState.codes?.length) parts.push(...statusState.codes.map((code) => translateCode(lang, code)));
@@ -666,6 +676,7 @@ form.addEventListener("input", (event) => {
   state.presetId = undefined;
   highlightPreset();
   refreshPreview();
+  refreshFieldErrors();
 });
 
 form.addEventListener("change", (event) => {
@@ -676,12 +687,16 @@ form.addEventListener("change", (event) => {
   state.presetId = undefined;
   highlightPreset();
   refreshPreview();
+  refreshFieldErrors();
 });
 
 modId.addEventListener("input", () => {
-  if (mavenTouched) return;
-  const value = modId.value.trim();
-  if (/^[a-z][a-z0-9_]*$/.test(value)) mavenGroup.value = `cn.example.${value}`;
+  if (!mavenTouched) {
+    const value = modId.value.trim();
+    if (/^[a-z][a-z0-9_]*$/.test(value)) mavenGroup.value = `cn.example.${value}`;
+  }
+  syncFromDom();
+  refreshFieldErrors();
 });
 
 mavenGroup.addEventListener("input", () => {
