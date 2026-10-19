@@ -45,6 +45,7 @@ let lastWarnings: string[] = [];
 let fieldErrors: FieldErrors = {};
 let lastDownloadUrl: string | undefined;
 let searchNotice: { key: string; vars?: Record<string, string | number> } = { key: "deps.searchIdle" };
+let renderingBases = false;
 
 interface StatusState {
   kind: "idle" | "ok" | "err" | "busy";
@@ -252,10 +253,12 @@ function renderBaseStatus(): void {
 }
 
 function renderBases(): void {
+  const selected = state.base;
   const groups: Array<{ key: string; items: BaseInfo[] }> = [
     { key: "base.group.maintained", items: bases.filter((base) => base.kind === "custom") },
     { key: "base.group.official", items: bases.filter((base) => base.kind === "arch-official") },
   ];
+  renderingBases = true;
   baseSelect.replaceChildren();
   for (const group of groups) {
     if (group.items.length === 0) continue;
@@ -266,12 +269,13 @@ function renderBases(): void {
       const option = document.createElement("option");
       option.value = base.id;
       option.textContent = base.minecraft || base.id;
-      option.selected = base.id === state.base;
       optgroup.append(option);
     }
     baseSelect.append(optgroup);
   }
-  if (baseSelect.value) state.base = baseSelect.value;
+  baseSelect.value = selected;
+  if (baseSelect.value !== selected && baseSelect.value) state.base = baseSelect.value;
+  renderingBases = false;
   renderBaseDetail();
   renderBaseStatus();
 }
@@ -656,6 +660,7 @@ async function applyPreset(id: string): Promise<void> {
 }
 
 form.addEventListener("input", (event) => {
+  if (renderingBases) return;
   const target = event.target;
   if (target instanceof HTMLElement && target.id === "search-input") return;
   state.presetId = undefined;
@@ -664,6 +669,7 @@ form.addEventListener("input", (event) => {
 });
 
 form.addEventListener("change", (event) => {
+  if (renderingBases) return;
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
   if (target.id === "search-input" || target.id === "import-file" || target.id === "icon-file") return;
@@ -683,6 +689,7 @@ mavenGroup.addEventListener("input", () => {
 });
 
 baseSelect.addEventListener("change", () => {
+  if (renderingBases) return;
   syncFromDom();
   versionCache.clear();
   renderBaseDetail();
