@@ -1,0 +1,14 @@
+{
+  "name": "arch-template",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests 2>/dev/null || node --test test/*.test.js",
+    "generate": "node dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
