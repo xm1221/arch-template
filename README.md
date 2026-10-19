@@ -1,8 +1,17 @@
 # arch-template
 
-Core engine + base templates for an Architectury dual-platform Minecraft mod project generator (to be hosted at `tools.xm1221.cn/arch-template`).
+Core engine + base templates for an Architectury dual-platform Minecraft mod project generator, hosted at `tools.xm1221.cn/arch-template`.
 
-**UI is out of scope** for this repo (a separate UI-Helper will call the library / Workers later).
+The web UI lives in [`web/`](web/README.md). It is a Vite form (Chinese by default, English toggle saved in `localStorage`) plus a thin API that calls `generateZip` (local Node server, Cloudflare Worker or Pages Functions, and a GitHub Pages static build that calls the Worker through `VITE_GENERATE_API`). Card copy for the tools.xm1221.cn aggregator is in [`web/SITE.md`](web/SITE.md). The sections below are the engine contract.
+
+## Web UI
+
+```bash
+npm run build
+cd web && npm install && npm run dev
+```
+
+Open `http://127.0.0.1:5173/arch-template/`. Deploy steps are in `web/README.md`.
 
 ## Features
 
@@ -66,11 +75,11 @@ const { buffer, warnings } = await generateZip(options);
 
 ## Arch-official bases
 
-See `scripts/vendor-arch-template.md`. A stub `templates/arch-official/1.19.2` proves the ingestion path.
+`node scripts/vendor-arch-official.mjs` vendors the Architectury `*-forge-fabric` versions that are not already maintained bases. The web dropdown reads `listBases()`: maintained **1.21.1** and **1.20.1**, then official **1.19.4, 1.19.3, 1.19.2, 1.19, 1.18.2, 1.18.1, 1.17.1, 1.16.5**. See `scripts/vendor-arch-template.md`.
 
 ## Known gaps
 
-- Template Gradle files are **lean skeletons** (not a full Loom-ready copy of hexdummy); enough for rename/zip tests and further wiring.
+- Template Gradle files are **lean skeletons** (not a full Loom-ready copy of hexdummy); enough for rename/zip tests and further wiring. Vendored official versions use that same skeleton with per-version pins.
 - CurseForge is stubbed.
 - Modrinth maven metadata id is guessed from slug when no coord override exists.
-- Full multi-version Arch official matrix is not vendored yet — add under `templates/arch-official/` as needed.
+- Upstream `architectury-templates` has no 1.21+ NeoForge generator entry. 1.21.1 is the maintained Fabric+NeoForge base.

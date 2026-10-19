@@ -3,3 +3,8 @@ dist/
 *.zip
 .DS_Store
 *.log
+web/node_modules/
+web/dist/
+web/dist-worker/
+web/.wrangler/
+web/worker/embedded-fs.generated.json

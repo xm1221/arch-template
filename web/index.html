@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Architectury 模组模板</title>
+    <meta
+      name="description"
+      content="生成 Fabric 与 Forge / NeoForge 双平台 Minecraft 模组工程。可选 Kotlin、Modrinth 依赖与国内 Maven 镜像。"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#form" data-i18n="app.skip">跳到表单</a>
+    <main class="page">
+      <header class="site-header">
+        <div class="header-row">
+          <p class="eyebrow">tools.xm1221.cn/arch-template</p>
+          <div class="lang-toggle" role="group" data-i18n-aria="lang.group" aria-label="语言">
+            <button type="button" id="lang-zh" data-lang="zh" aria-pressed="true">中文</button>
+            <button type="button" id="lang-en" data-lang="en" aria-pressed="false">English</button>
+          </div>
+        </div>
+        <h1 data-i18n="app.title">Architectury 模组模板</h1>
+        <p class="lede" data-i18n="app.lede">
+          填好项目信息，下载一份能直接打开的双平台工程。选项在这里整理，压缩包由服务端的 generateZip 生成。
+        </p>
+      </header>
+
+      <form id="form" class="stack" novalidate>
+        <section class="card" aria-labelledby="preset-heading">
+          <div class="section-head">
+            <h2 id="preset-heading" data-i18n="preset.title">预设</h2>
+            <p data-i18n="preset.note">三个自带预设可以直接填入表单。也可以把当前内容导出成 JSON，以后再导入。</p>
+          </div>
+          <div id="preset-list" class="choice-grid presets"></div>
+          <p id="preset-status" class="hint" data-i18n="preset.loading">正在读取预设…</p>
+          <div class="button-row">
+            <button type="button" class="button-secondary" id="export-button" data-i18n="preset.export">导出预设 JSON</button>
+            <button type="button" class="button-secondary" id="import-button" data-i18n="preset.import">导入预设 JSON</button>
+            <input id="import-file" type="file" accept="application/json,.json" hidden />
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="project-heading">
+          <div class="section-head">
+            <h2 id="project-heading" data-i18n="project.title">项目</h2>
+            <p data-i18n="project.note">这些字段会写进 Gradle 和模组元数据。</p>
+          </div>
+          <div class="fields">
+            <div class="field-row">
+              <div class="field">
+                <label for="displayName" data-i18n="displayName.label">显示名称</label>
+                <input id="displayName" name="displayName" autocomplete="off" maxlength="128" />
+                <p class="hint" data-i18n="displayName.hint">游戏里和工程里显示的名字，例如 Example Mod。</p>
+                <p class="field-error" id="displayName-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="modVersion" data-i18n="modVersion.label">版本号</label>
+                <input id="modVersion" name="modVersion" autocomplete="off" spellcheck="false" maxlength="64" />
+                <p class="hint" data-i18n="modVersion.hint">写进版本号字段，例如 0.1.0。</p>
+                <p class="field-error" id="modVersion-error" hidden></p>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="modId" data-i18n="modId.label">模组 ID</label>
+                <input id="modId" name="modId" autocomplete="off" spellcheck="false" maxlength="64" />
+                <p class="hint" data-i18n="modId.hint">小写字母开头，后面可以是小写字母、数字或下划线。</p>
+                <p class="field-error" id="modId-error" hidden></p>
+              </div>
+              <div class="field">
+                <label for="mavenGroup" data-i18n="mavenGroup.label">Maven 组</label>
+                <input id="mavenGroup" name="mavenGroup" autocomplete="off" spellcheck="false" maxlength="200" />
+                <p class="hint" data-i18n="mavenGroup.hint">Java 包名，例如 cn.example.examplemod。不能使用 Java 关键字。</p>
+                <p class="field-error" id="mavenGroup-error" hidden></p>
+              </div>
+            </div>
+            <label class="check">
+              <input id="kotlin" type="checkbox" />
+              <span>
+                <span class="check-title" data-i18n="kotlin.title">使用 Kotlin</span>
+                <span class="hint" data-i18n="kotlin.hint">勾选后保留 Kotlin 源文件，并去掉对应的 Java 桩。</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="subhead">
+            <h3 id="base-heading" data-i18n="base.title">Minecraft 版本</h3>
+            <p data-i18n="base.note">「维护底模」由本仓库持续更新。「Arch 官方模板」来自已收录的 Architectury 官方生成器条目，走同一套 generateZip，不会只给一个外链。</p>
+          </div>
+          <div class="field base-field">
+            <label for="base" data-i18n="base.label">选择版本</label>
+            <select id="base" name="base"></select>
+            <p class="hint" id="base-detail"></p>
+          </div>
+          <p id="base-status" class="hint" data-i18n="base.loading">正在读取版本…</p>
+          <p class="field-error" id="base-error" hidden></p>
+        </section>
+
+        <section class="card" aria-labelledby="optional-heading">
+          <div class="section-head">
+            <h2 id="optional-heading" data-i18n="optional.title">可选内容</h2>
+            <p data-i18n="optional.note">不勾选也可以生成一份干净的基线工程。</p>
+          </div>
+          <div class="checks">
+            <label class="check">
+              <input id="hexdoc" type="checkbox" />
+              <span>
+                <span class="check-title" data-i18n="hexdoc.title">hexdoc 文档</span>
+                <span class="hint" data-i18n="hexdoc.hint">带上 doc/ 目录。hexdoc 依赖按可选配方写入（required = false）。</span>
+              </span>
+            </label>
+            <label class="check">
+              <input id="hexCastingAddon" type="checkbox" />
+              <span>
+                <span class="check-title" data-i18n="hexAddon.title">Hex Casting 附属</span>
+                <span class="hint" data-i18n="hexAddon.hint">如果依赖列表里还没有 Hex Casting，生成时会尝试补上。主要面向 1.20.1。</span>
+              </span>
+            </label>
+            <label class="check">
+              <input id="mirrors" type="checkbox" />
+              <span>
+                <span class="check-title" data-i18n="mirrors.title">国内校园网 Maven 镜像（cn-campus）</span>
+                <span class="hint" data-i18n="mirrors.hint">只镜像 Maven Central 和 Gradle Plugin Portal，不会替换 Fabric / Forge 专用仓库。</span>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="deps-heading">
+          <div class="section-head">
+            <h2 id="deps-heading" data-i18n="deps.title">依赖</h2>
+            <p data-i18n="deps.note">从 Modrinth 搜索项目并选择版本。生成时写入 Gradle 依赖。</p>
+          </div>
+          <div class="search-row">
+            <label class="sr-only" for="search-input" data-i18n="deps.searchLabel">搜索 Modrinth</label>
+            <input id="search-input" type="search" data-i18n-placeholder="deps.searchPlaceholder" placeholder="搜索模组名或 slug" autocomplete="off" maxlength="100" />
+            <button type="button" class="button-secondary" id="search-button" data-i18n="deps.search">搜索</button>
+          </div>
+          <p id="search-status" class="hint" role="status" data-i18n="deps.searchIdle">输入模组名或 slug，例如 hex-casting。</p>
+          <div id="search-results" class="search-results"></div>
+          <div id="dep-list" class="dep-list"></div>
+          <p class="field-error" id="dependencies-error" hidden></p>
+
+          <div class="unsupported" aria-disabled="true">
+            <h3 data-i18n="curse.title">CurseForge</h3>
+            <p data-i18n="curse.note">未支持。当前只能添加 Modrinth 依赖。</p>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="icon-heading">
+          <div class="section-head">
+            <h2 id="icon-heading" data-i18n="icon.title">图标</h2>
+            <p data-i18n="icon.note">可选。不上传时使用模板自带的占位图标。仅接受 PNG，不超过 512KB。</p>
+          </div>
+          <div class="icon-row">
+            <div class="icon-preview" id="icon-preview" aria-hidden="true"><span data-i18n="icon.none">无图标</span></div>
+            <div class="icon-controls">
+              <input id="icon-file" type="file" accept="image/png,.png" />
+              <button type="button" class="button-secondary" id="icon-clear" hidden data-i18n="icon.clear">移除图标</button>
+              <p class="hint" id="icon-meta"></p>
+              <p class="warning-inline" id="icon-warning" hidden></p>
+              <p class="field-error" id="icon-error" hidden></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="generate-heading">
+          <div class="section-head">
+            <h2 id="generate-heading" data-i18n="generate.title">生成</h2>
+            <p data-i18n="generate.note">提交当前表单，下载 zip。警告会列在按钮下面，不会中断下载。</p>
+          </div>
+          <p id="form-error" class="form-error" hidden></p>
+          <div class="generate-row">
+            <button type="submit" class="button-primary" id="generate-button" disabled data-i18n="generate.button">生成并下载 ZIP</button>
+          </div>
+          <div id="status" class="status" role="status"></div>
+          <ul id="warnings" class="warnings" hidden></ul>
+          <details class="json-details">
+            <summary data-i18n="generate.json">查看将提交的 JSON</summary>
+            <pre id="json-preview"></pre>
+          </details>
+        </section>
+      </form>
+
+      <footer class="site-footer">
+        <p data-i18n="app.footer">引擎与模板来自 arch-template。CurseForge 未支持。</p>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

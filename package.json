@@ -19,7 +19,10 @@
   "scripts": {
     "build": "tsc",
     "test": "npm run build && node --test dist/test/core.test.js",
-    "generate": "node dist/cli.js"
+    "generate": "node dist/cli.js",
+    "web:dev": "npm run build && npm --prefix web run dev",
+    "web:smoke": "npm run build && npm --prefix web run smoke",
+    "web:start": "npm run build && npm --prefix web run build && npm --prefix web start"
   },
   "dependencies": {
     "jszip": "^3.10.1"

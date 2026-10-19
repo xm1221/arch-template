@@ -1,0 +1,45 @@
+name: GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Static UI only. Generation stays on the Cloudflare API from VITE_GENERATE_API.
+    # Skip automatic deploys until that variable exists, so CI is not red before handoff.
+    if: github.event_name == 'workflow_dispatch' || vars.VITE_GENERATE_API != ''
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build engine
+        run: npm ci && npm run build
+      - name: Build static UI
+        working-directory: web
+        env:
+          VITE_GENERATE_API: ${{ vars.VITE_GENERATE_API }}
+          VITE_BASE: ${{ vars.VITE_BASE != '' && vars.VITE_BASE || '/arch-template/' }}
+        run: npm ci && npm run build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
