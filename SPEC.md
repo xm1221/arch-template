@@ -8,7 +8,7 @@ Generate a downloadable Architectury dual-platform Minecraft mod project ZIP fro
 ## Non-goals (this milestone)
 - Polished React/Vue UI (UI-Helper later)
 - CurseForge API (stub interface only)
-- Supporting every MC version as a maintained base (only 1.20.1 + 1.21.1)
+- Hand-maintaining custom bases for every MC version (only 1.20.1 + 1.21.1 are custom; other versions use vendored Architectury official templates as bases)
 
 ## Base templates (maintained)
 1. **1.20.1** Fabric+Forge, derived from FallingColors/hexdummy (Copier source of MieHex:Revolution), cleaned:
@@ -16,7 +16,7 @@ Generate a downloadable Architectury dual-platform Minecraft mod project ZIP fro
    - hexdoc pattern stub `required = false` if hexdoc included as optional recipe
    - keep: `libs.versions.toml`, convention-plugin style (simplified OK), Architectury common/fabric/forge
 2. **1.21.1** Fabric+NeoForge (not legacy Forge), same “easy compat” conventions
-3. Other MC versions: do **not** maintain; expose metadata pointing users to Architectury official templates
+3. Other MC versions: **do not hand-maintain** custom trees, but the generator **must still produce a zip** by ingesting Architectury's official templates ([architectury/architectury-templates](https://github.com/architectury/architectury-templates) / their published generator output) as the base, then applying the same rename / deps / mirrors / presets pipeline. Never only give the user a link and make them scaffold themselves.
 
 ## Options the engine must accept (JSON)
 ```json
