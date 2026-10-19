@@ -150,6 +150,18 @@ GitHub Pages 只托管静态页面，不能在浏览器里跑 `generateZip`。�
 - `VITE_GENERATE_API` = `https://arch-template.<子域>.workers.dev/arch-template/api`
 - 若 Pages 和 Worker 不同源，在 Worker 里设置 `CORS_ORIGIN` 为 Pages 的源，例如 `https://<user>.github.io`。多个源用逗号隔开。
 
+## CI 自动部署（Workers）
+
+`.github/workflows/deploy-worker.yml`：推到 `main` 或手动 `workflow_dispatch` 时构建引擎并执行 `web` 里的 `npm run deploy`。
+
+仓库 Secrets：
+
+- `CLOUDFLARE_API_TOKEN`（已用于 pixelstage 等同账号 token 即可）
+
+Account id 写在 workflow 环境变量里（公开），不进 wrangler 配置。自定义路由 `tools.xm1221.cn/arch-template*` 在 `web/wrangler.toml`。
+
+---
+
 ## 交给 MieHelper 的清单
 
 密钥在 MieHelper 那边，不要写回这个仓库。

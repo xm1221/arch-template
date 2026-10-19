@@ -1,0 +1,43 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      # Public account id for xm1221.cn (same as pixelstage / tools).
+      CLOUDFLARE_ACCOUNT_ID: "ab2343f4691dfe98689e375fc23d4121"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Require Cloudflare API token
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "Set repository secret CLOUDFLARE_API_TOKEN before deploying."
+            exit 1
+          fi
+
+      - name: Build engine
+        run: npm ci && npm run build
+
+      - name: Deploy Worker + static assets
+        working-directory: web
+        run: npm ci && npm run deploy
