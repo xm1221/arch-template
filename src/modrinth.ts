@@ -174,9 +174,14 @@ export function buildGradleDeps(
     ? options.platforms
     : ["fabric", "forge", "neoforge"];
   const declaredPlatforms = version.loaders ?? [];
-  const supportedPlatforms = declaredPlatforms.length
-    ? requestedPlatforms.filter((platform) => declaredPlatforms.includes(platform))
-    : requestedPlatforms;
+  // Coordinate overrides publish one artifact per requested loader. Modrinth
+  // may expose those artifacts as separate version records with the same
+  // version number, so a single record cannot describe all supported loaders.
+  const supportedPlatforms = override
+    ? requestedPlatforms
+    : declaredPlatforms.length
+      ? requestedPlatforms.filter((platform) => declaredPlatforms.includes(platform))
+      : requestedPlatforms;
   if (supportedPlatforms.length === 0) {
     throw new Error(
       `Dependency "${project.slug}" does not support ${requestedPlatforms.join("/")}`,

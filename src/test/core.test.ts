@@ -31,7 +31,7 @@ async function withHexCastingApi<T>(run: () => Promise<T>): Promise<T> {
           project_id: "hexcasting-project",
           version_number: "0.11.4",
           game_versions: ["1.20.1"],
-          loaders: ["fabric", "forge"],
+          loaders: ["forge"],
         }),
         { status: 200, headers: { "Content-Type": "application/json" } },
       );
@@ -93,6 +93,8 @@ describe("coords", () => {
       { minecraftVersion: "1.20.1", depType: "required" },
     );
     assert.ok(plan.dependencies.common[0].includes("at.petra-k.hexcasting"));
+    assert.ok(plan.dependencies.fabric[0].includes("hexcasting-fabric-1.20.1"));
+    assert.ok(plan.dependencies.forge[0].includes("hexcasting-forge-1.20.1"));
     assert.ok(plan.repositories.some((r) => r.includes("hexxy.media")));
     assert.ok(plan.repositories.every((r) => !r.includes('maven("')));
     assert.ok(plan.repositories.some((r) => r === 'maven { url "https://maven.hexxy.media/" }'));
