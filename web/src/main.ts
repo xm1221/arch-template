@@ -45,6 +45,7 @@ let lastWarnings: string[] = [];
 let fieldErrors: FieldErrors = {};
 let lastDownloadUrl: string | undefined;
 let searchNotice: { key: string; vars?: Record<string, string | number> } = { key: "deps.searchIdle" };
+let renderingBases = false;
 
 interface StatusState {
   kind: "idle" | "ok" | "err" | "busy";
@@ -185,6 +186,16 @@ function clearFieldErrors(): void {
   showErrors({});
 }
 
+function refreshFieldErrors(): void {
+  if (!hasErrors(fieldErrors)) return;
+  const errors = validateForm(state, baseIds());
+  if (!basesReady && fieldErrors.form) errors.form = fieldErrors.form;
+  showErrors(errors);
+  if (!hasErrors(errors) && (statusState.key === "generate.invalid" || statusState.key === "preset.exportInvalid")) {
+    setStatus({ kind: "idle" });
+  }
+}
+
 function renderStatus(): void {
   const parts: string[] = [];
   if (statusState.codes?.length) parts.push(...statusState.codes.map((code) => translateCode(lang, code)));
@@ -254,10 +265,12 @@ function renderBaseStatus(): void {
 }
 
 function renderBases(): void {
+  const selected = state.base;
   const groups: Array<{ key: string; items: BaseInfo[] }> = [
     { key: "base.group.maintained", items: bases.filter((base) => base.kind === "custom") },
     { key: "base.group.official", items: bases.filter((base) => base.kind === "arch-official") },
   ];
+  renderingBases = true;
   baseSelect.replaceChildren();
   for (const group of groups) {
     if (group.items.length === 0) continue;
@@ -268,12 +281,13 @@ function renderBases(): void {
       const option = document.createElement("option");
       option.value = base.id;
       option.textContent = base.minecraft || base.id;
-      option.selected = base.id === state.base;
       optgroup.append(option);
     }
     baseSelect.append(optgroup);
   }
-  if (baseSelect.value) state.base = baseSelect.value;
+  baseSelect.value = selected;
+  if (baseSelect.value !== selected && baseSelect.value) state.base = baseSelect.value;
+  renderingBases = false;
   renderBaseDetail();
   renderBaseStatus();
 }
@@ -659,26 +673,33 @@ async function applyPreset(id: string): Promise<void> {
 }
 
 form.addEventListener("input", (event) => {
+  if (renderingBases) return;
   const target = event.target;
   if (target instanceof HTMLElement && target.id === "search-input") return;
   state.presetId = undefined;
   highlightPreset();
   refreshPreview();
+  refreshFieldErrors();
 });
 
 form.addEventListener("change", (event) => {
+  if (renderingBases) return;
   const target = event.target;
   if (!(target instanceof HTMLElement)) return;
   if (target.id === "search-input" || target.id === "import-file" || target.id === "icon-file") return;
   state.presetId = undefined;
   highlightPreset();
   refreshPreview();
+  refreshFieldErrors();
 });
 
 modId.addEventListener("input", () => {
-  if (mavenTouched) return;
-  const value = modId.value.trim();
-  if (/^[a-z][a-z0-9_]*$/.test(value)) mavenGroup.value = `cn.example.${value}`;
+  if (!mavenTouched) {
+    const value = modId.value.trim();
+    if (/^[a-z][a-z0-9_]*$/.test(value)) mavenGroup.value = `cn.example.${value}`;
+  }
+  syncFromDom();
+  refreshFieldErrors();
 });
 
 mavenGroup.addEventListener("input", () => {
@@ -686,6 +707,7 @@ mavenGroup.addEventListener("input", () => {
 });
 
 baseSelect.addEventListener("change", () => {
+  if (renderingBases) return;
   syncFromDom();
   versionCache.clear();
   renderBaseDetail();
