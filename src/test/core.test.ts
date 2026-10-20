@@ -94,6 +94,20 @@ describe("coords", () => {
     );
     assert.ok(plan.dependencies.common[0].includes("at.petra-k.hexcasting"));
     assert.ok(plan.repositories.some((r) => r.includes("hexxy.media")));
+    assert.ok(plan.repositories.every((r) => !r.includes('maven("')));
+    assert.ok(plan.repositories.some((r) => r === 'maven { url "https://maven.hexxy.media/" }'));
+  });
+
+  it("buildGradleDeps emits valid Groovy for Modrinth repositories", () => {
+    const plan = buildGradleDeps(
+      { id: "sodium", slug: "sodium", title: "Sodium" },
+      { id: "v", project_id: "sodium", version_number: "mc1.20.1-0.5.11" },
+      { minecraftVersion: "1.20.1" },
+    );
+    const repository = plan.repositories.join("\n");
+    assert.match(repository, /forRepository\s*\{[\s\S]*maven\s*\{/);
+    assert.match(repository, /url\s*=\s*"https:\/\/api\.modrinth\.com\/maven"/);
+    assert.doesNotMatch(repository, /maven\("http/);
   });
 
   it("does not emit dependencies for unsupported platforms", () => {
@@ -255,7 +269,15 @@ describe("gradle completeness", () => {
     assert.match(fabric, /hexcasting-fabric-1\.20\.1/);
     assert.match(forge, /hexcasting-forge-1\.20\.1/);
     const root = await zip.file("hexexample/build.gradle")!.async("string");
-    assert.match(root, /maven\.hexxy\.media|maven\.blamejared\.com/);
+    assert.match(root, /id "dev\.architectury\.loom" version "1\.14\.476" apply false/);
+    assert.match(root, /id "org\.jetbrains\.kotlin\.jvm" version "2\.2\.21" apply false/);
+    assert.match(root, /maven \{ url "https:\/\/maven\.hexxy\.media\/" \}/);
+    assert.match(root, /maven \{ url "https:\/\/maven\.blamejared\.com\/" \}/);
+    assert.doesNotMatch(root, /maven\("http/);
+    const versions = await zip.file("hexexample/gradle/libs.versions.toml")!.async("string");
+    assert.match(versions, /^kotlin = "2\.2\.21"$/m);
+    assert.match(versions, /^kotlin-fabric = "1\.13\.7\+kotlin\.2\.2\.21"$/m);
+    assert.match(versions, /^kotlin-forge = "4\.12\.0"$/m);
     const fabricMod = await zip.file("hexexample/fabric/src/main/resources/fabric.mod.json")!.async("string");
     assert.match(fabricMod, /hexcasting/);
   });

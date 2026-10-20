@@ -203,7 +203,7 @@ export function buildGradleDeps(
     fabricCoordinate = `${override.modules.fabric}:${version.version_number}`;
     forgeCoordinate = `${override.modules.forge}:${version.version_number}`;
     neoforgeCoordinate = `${override.modules.neoforge}:${version.version_number}`;
-    repositories = override.repositories.map((url) => `maven("${url}")`);
+    repositories = override.repositories.map((url) => `maven { url "${url}" }`);
     metadataModId = "hexcasting";
   } else {
     const coordinate = `maven.modrinth:${project.slug}:${version.version_number}`;
@@ -214,7 +214,12 @@ export function buildGradleDeps(
     repositories = [
       [
         "exclusiveContent {",
-        '    forRepository { maven("https://api.modrinth.com/maven") { name = "Modrinth" } }',
+        "    forRepository {",
+        "        maven {",
+        '            name = "Modrinth"',
+        '            url = "https://api.modrinth.com/maven"',
+        "        }",
+        "    }",
         '    filter { includeGroup("maven.modrinth") }',
         "}",
       ].join("\n"),

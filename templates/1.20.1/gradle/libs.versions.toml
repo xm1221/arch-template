@@ -4,7 +4,7 @@ architectury = "__ARCHITECTURY__"
 fabric-loader = "__FABRIC_LOADER__"
 fabric-api = "__FABRIC_API__"
 forge = "1.20.1-47.2.0"
-kotlin = "2.0.21"
+kotlin = "2.2.21"
 kotlin-fabric = "__KOTLIN_FABRIC__"
 kotlin-forge = "__KOTLIN_FORGE__"
 
