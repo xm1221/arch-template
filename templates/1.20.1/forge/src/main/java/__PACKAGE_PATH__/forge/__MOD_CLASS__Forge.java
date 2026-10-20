@@ -1,5 +1,6 @@
-package __PACKAGE_NAME__;
+package __PACKAGE_NAME__.forge;
 
+import __PACKAGE_NAME__.__MOD_CLASS__;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod(__MOD_CLASS__.MOD_ID)

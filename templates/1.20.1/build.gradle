@@ -1,6 +1,6 @@
 plugins {
     id "architectury-plugin" version "[3.4,3.5["
-    id "dev.architectury.loom" version "1.14.476" apply false
+    id "dev.architectury.loom" version "[1.9,1.10[" apply false
     // __KOTLIN_ONLY__
     id "org.jetbrains.kotlin.jvm" version "2.2.21" apply false
     // __END_KOTLIN_ONLY__

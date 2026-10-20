@@ -1,5 +1,5 @@
 import type { DependencyType } from "./options.js";
-import { resolveCoordOverride } from "./coords.js";
+import { hexCastingRuntimeCoordinates, resolveCoordOverride } from "./coords.js";
 
 const API_BASE = "https://api.modrinth.com/v2";
 const USER_AGENT = "arch-template/0.1.0 (https://tools.xm1221.cn/arch-template)";
@@ -267,6 +267,34 @@ export function buildGradleDeps(
     },
     metadata,
     warnings,
+  };
+}
+
+/**
+ * Build the non-transitive Hex Casting runtime dependencies omitted from its
+ * published POMs. These are runtime mods, so the generated addon should load
+ * them through the platform implementation configuration.
+ */
+export function buildHexCastingRuntimeDeps(
+  minecraftVersion: string,
+  platforms: string[],
+): GradleDepPlan | null {
+  const coordinates = hexCastingRuntimeCoordinates(minecraftVersion);
+  if (!coordinates) {
+    return null;
+  }
+  const platformLines = (platform: "fabric" | "forge") =>
+    platforms.includes(platform) ? coordinates[platform] : [];
+  return {
+    repositories: coordinates.repositories.map((url) => `maven { url "${url}" }`),
+    dependencies: {
+      common: coordinates.common,
+      fabric: platformLines("fabric"),
+      forge: platformLines("forge"),
+      neoforge: [],
+    },
+    metadata: [],
+    warnings: [],
   };
 }
 

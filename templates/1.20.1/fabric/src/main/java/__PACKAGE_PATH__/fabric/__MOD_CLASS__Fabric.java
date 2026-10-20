@@ -1,5 +1,6 @@
-package __PACKAGE_NAME__;
+package __PACKAGE_NAME__.fabric;
 
+import __PACKAGE_NAME__.__MOD_CLASS__;
 import net.fabricmc.api.ModInitializer;
 
 public final class __MOD_CLASS__Fabric implements ModInitializer {

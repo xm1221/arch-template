@@ -17,6 +17,7 @@ import {
   resolveGradleDistributionUrl,
 } from "./mirrors.js";
 import {
+  buildHexCastingRuntimeDeps,
   buildGradleDeps,
   fetchProject,
   fetchVersion,
@@ -280,6 +281,18 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
   }
   // Optional hex casting addon recipe injects a default dep if not already present
   if (recipes.hexCastingAddon) {
+    const runtimePlan = buildHexCastingRuntimeDeps(
+      baseInfo.meta.minecraft,
+      baseInfo.meta.platforms,
+    );
+    if (runtimePlan) {
+      plans.push(runtimePlan);
+    } else {
+      warnings.push(
+        `hexCastingAddon recipe: no bundled Hex Casting runtime dependency set for Minecraft ${baseInfo.meta.minecraft}.`,
+      );
+    }
+
     const hasHex = (options.dependencies ?? []).some((d) =>
       ["hex-casting", "hexcasting"].includes(d.project),
     );

@@ -44,7 +44,7 @@ dependencies {
     neoForge "net.neoforged:neoforge:${rootProject.neoforge_version}"
     modApi "dev.architectury:architectury-neoforge:${rootProject.architectury_version}"
     // __KOTLIN_ONLY__
-    modImplementation("thedarkcolour:kotlinforforge-neoforge:${rootProject.kotlin_forge_version}")
+    implementation("thedarkcolour:kotlinforforge-neoforge:${rootProject.kotlin_forge_version}")
     // __END_KOTLIN_ONLY__
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }

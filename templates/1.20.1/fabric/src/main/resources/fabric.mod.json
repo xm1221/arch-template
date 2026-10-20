@@ -12,7 +12,7 @@
   "entrypoints": {
     "main": [
       {
-        __ENTRYPOINT_ADAPTER__"value": "__PACKAGE_NAME__.__MOD_CLASS__Fabric"
+        __ENTRYPOINT_ADAPTER__"value": "__PACKAGE_NAME__.fabric.__MOD_CLASS__Fabric"
       }
     ]
   },
