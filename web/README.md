@@ -53,7 +53,7 @@ npm install --prefix web
 npm run web:dev
 ```
 
-冒烟测试（读预设、生成 zip、检查 `settings.gradle.kts` 里的 modId，再生成一份 1.18.2 官方底模，并走一遍 Worker 打包）：
+冒烟测试（读预设、生成 zip、检查 `settings.gradle` 里的 modId，再生成一份 1.18.2 官方底模，并走一遍 Worker 打包）：
 
 ```bash
 npm test

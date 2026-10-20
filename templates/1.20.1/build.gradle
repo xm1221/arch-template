@@ -1,6 +1,6 @@
 plugins {
-    id "architectury-plugin" version "3.4-SNAPSHOT"
-    id "dev.architectury.loom" version "1.6-SNAPSHOT" apply false
+    id "architectury-plugin" version "[3.4,3.5["
+    id "dev.architectury.loom" version "[1.9,1.10[" apply false
     // __KOTLIN_ONLY__
     id "org.jetbrains.kotlin.jvm" version "2.0.21" apply false
     // __END_KOTLIN_ONLY__
@@ -50,13 +50,13 @@ allprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-        options.release = 17
+        options.release = __JAVA_VERSION__
     }
 
     // __KOTLIN_ONLY__
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            jvmTarget = "17"
+            jvmTarget = "__KOTLIN_JVM_TARGET__"
         }
     }
     // __END_KOTLIN_ONLY__

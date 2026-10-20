@@ -8,7 +8,15 @@ export type {
   TemplateMeta,
 } from "./options.js";
 
-export { validateOptions, validateModId, validateMavenGroup, ValidationError, MOD_ID_PATTERN } from "./validate.js";
+export {
+  validateOptions,
+  validateModId,
+  validateMavenGroup,
+  validatePresetId,
+  ValidationError,
+  MOD_ID_PATTERN,
+  PRESET_ID_PATTERN,
+} from "./validate.js";
 export {
   applyPlaceholders,
   buildPlaceholderMap,
@@ -22,6 +30,7 @@ export {
   fetchVersion,
   buildGradleDeps,
   fetchCurseForgeProject,
+  type VersionFilters,
 } from "./modrinth.js";
 export {
   buildInitMirrorsGradle,

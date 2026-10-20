@@ -1,6 +1,6 @@
 {
   "pack": {
-    "description": "__DISPLAY_NAME__",
+    "description": "__DISPLAY_NAME_JSON__",
     "pack_format": 8
   }
 }

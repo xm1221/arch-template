@@ -39,6 +39,33 @@ function modLoader(options: GenerateOptions, meta?: TemplateMeta): {
   };
 }
 
+function escapeJsonString(value: string): string {
+  return JSON.stringify(value).slice(1, -1);
+}
+
+function escapeTomlString(value: string): string {
+  return value.replace(/[\u0000-\u001f\u007f"\\]/g, (char) => {
+    switch (char) {
+      case "\b":
+        return "\\b";
+      case "\t":
+        return "\\t";
+      case "\n":
+        return "\\n";
+      case "\f":
+        return "\\f";
+      case "\r":
+        return "\\r";
+      case '"':
+        return '\\"';
+      case "\\":
+        return "\\\\";
+      default:
+        return `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`;
+    }
+  });
+}
+
 export function buildPlaceholderMap(
   options: GenerateOptions,
   meta?: TemplateMeta,
@@ -48,6 +75,8 @@ export function buildPlaceholderMap(
     __MOD_ID__: options.modId,
     __MAVEN_GROUP__: options.mavenGroup,
     __DISPLAY_NAME__: options.displayName,
+    __DISPLAY_NAME_JSON__: escapeJsonString(options.displayName),
+    __DISPLAY_NAME_TOML__: escapeTomlString(options.displayName),
     __PACKAGE_PATH__: options.mavenGroup.replace(/\./g, "/"),
     __PACKAGE_NAME__: options.mavenGroup,
     __MOD_VERSION__: options.modVersion,
@@ -63,6 +92,7 @@ export function buildPlaceholderMap(
     map.__FABRIC_API__ = meta.fabricApi;
     map.__ARCHITECTURY__ = meta.architectury;
     map.__JAVA_VERSION__ = String(meta.java);
+    map.__KOTLIN_JVM_TARGET__ = meta.java === 8 ? "1.8" : String(meta.java);
     map.__KOTLIN_FABRIC__ = meta.kotlinFabric ?? "";
     map.__KOTLIN_FORGE__ = meta.kotlinForge ?? "";
     map.__FABRIC_KOTLIN_DEPEND__ =

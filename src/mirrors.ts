@@ -5,13 +5,13 @@
  * script does not rewrite Fabric, Forge, NeoForge, or other exclusive repos.
  */
 
-/** Default Gradle version shipped in template wrappers (Architectury 1.20.x era). */
-export const DEFAULT_GRADLE_VERSION = "8.4";
+/** Gradle version shipped in template wrappers. Loom 1.9 requires >= 8.6. */
+export const DEFAULT_GRADLE_VERSION = "8.13";
 
 const OFFICIAL_WRAPPER = (version: string) =>
   `https://services.gradle.org/distributions/gradle-${version}-bin.zip`;
 
-/** Tencent Cloud mirror of Gradle distributions (verified for gradle-8.4-bin.zip). */
+/** Tencent Cloud mirror of Gradle distributions. */
 const TENCENT_WRAPPER = (version: string) =>
   `https://mirrors.cloud.tencent.com/gradle/gradle-${version}-bin.zip`;
 

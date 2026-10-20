@@ -16,12 +16,16 @@ export interface ModrinthVersion {
   version_number: string;
   name?: string;
   version_type?: string;
+  game_versions?: string[];
+  loaders?: string[];
+  date_published?: string;
 }
 
 export interface GradleDepMetadata {
   modId: string;
   versionNumber: string;
   depType: DependencyType;
+  platforms: string[];
 }
 
 export interface GradleDepPlan {
@@ -59,39 +63,93 @@ export async function fetchVersions(project: string): Promise<ModrinthVersion[]>
   );
 }
 
+export interface VersionFilters {
+  projectId?: string;
+  minecraftVersion?: string;
+  loaders?: string[];
+}
+
+function matchesVersionFilters(version: ModrinthVersion, filters: VersionFilters): boolean {
+  if (filters.projectId && version.project_id !== filters.projectId) {
+    return false;
+  }
+  if (
+    filters.minecraftVersion &&
+    !(version.game_versions ?? []).includes(filters.minecraftVersion)
+  ) {
+    return false;
+  }
+  if (
+    filters.loaders?.length &&
+    !(version.loaders ?? []).some((loader) => filters.loaders!.includes(loader))
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function describeVersionFilters(filters: VersionFilters): string {
+  const parts = [
+    filters.minecraftVersion ? `Minecraft ${filters.minecraftVersion}` : "",
+    filters.loaders?.length ? `loaders ${filters.loaders.join("/")}` : "",
+  ].filter(Boolean);
+  return parts.length ? ` (requires ${parts.join(", ")})` : "";
+}
+
 /**
- * Resolve a Modrinth version by id or version number. When no version is
- * supplied the newest version returned by the API is used.
+ * Resolve a Modrinth version by id or version number, optionally requiring
+ * that it belongs to the expected project and supports the target MC/loaders.
  */
 export async function fetchVersion(
   project: string,
   version?: string,
+  filters: VersionFilters = {},
 ): Promise<ModrinthVersion> {
   if (version && version.trim() !== "") {
+    let direct: ModrinthVersion | undefined;
     try {
-      return await getJson<ModrinthVersion>(
+      direct = await getJson<ModrinthVersion>(
         `${API_BASE}/version/${encodeURIComponent(version)}`,
       );
     } catch {
       // The /version/{id} endpoint may reject a version number on some
       // projects; fall back to scanning the project's version list.
     }
+    if (direct) {
+      if (!matchesVersionFilters(direct, filters)) {
+        throw new Error(
+          `Modrinth version "${version}" is not compatible with project "${project}"${describeVersionFilters(filters)}`,
+        );
+      }
+      return direct;
+    }
 
     const versions = await fetchVersions(project);
     const match = versions.find(
-      (candidate) => candidate.id === version || candidate.version_number === version,
+      (candidate) =>
+        (candidate.id === version || candidate.version_number === version) &&
+        matchesVersionFilters(candidate, filters),
     );
     if (!match) {
-      throw new Error(`Modrinth version "${version}" was not found for project "${project}"`);
+      throw new Error(
+        `Modrinth version "${version}" was not found for project "${project}"${describeVersionFilters(filters)}`,
+      );
     }
     return match;
   }
 
   const versions = await fetchVersions(project);
-  if (versions.length === 0) {
-    throw new Error(`Modrinth project "${project}" has no published versions`);
+  const compatible = versions
+    .filter((candidate) => matchesVersionFilters(candidate, filters))
+    .sort((a, b) =>
+      String(b.date_published ?? "").localeCompare(String(a.date_published ?? "")),
+    );
+  if (compatible.length === 0) {
+    throw new Error(
+      `Modrinth project "${project}" has no published versions${describeVersionFilters(filters)}`,
+    );
   }
-  return versions[0];
+  return compatible[0];
 }
 
 /**
@@ -102,12 +160,36 @@ export async function fetchVersion(
 export function buildGradleDeps(
   project: ModrinthProject,
   version: ModrinthVersion,
-  options: { minecraftVersion: string; depType?: DependencyType },
+  options: {
+    minecraftVersion: string;
+    depType?: DependencyType;
+    platforms?: string[];
+  },
 ): GradleDepPlan {
   const depType = options.depType ?? "required";
   const warnings: string[] = [];
   const metadata: GradleDepMetadata[] = [];
   const override = resolveCoordOverride(project, options.minecraftVersion);
+  const requestedPlatforms = options.platforms?.length
+    ? options.platforms
+    : ["fabric", "forge", "neoforge"];
+  const declaredPlatforms = version.loaders ?? [];
+  const supportedPlatforms = declaredPlatforms.length
+    ? requestedPlatforms.filter((platform) => declaredPlatforms.includes(platform))
+    : requestedPlatforms;
+  if (supportedPlatforms.length === 0) {
+    throw new Error(
+      `Dependency "${project.slug}" does not support ${requestedPlatforms.join("/")}`,
+    );
+  }
+  const missingPlatforms = requestedPlatforms.filter(
+    (platform) => !supportedPlatforms.includes(platform),
+  );
+  if (missingPlatforms.length) {
+    warnings.push(
+      `Dependency "${project.slug}" does not support ${missingPlatforms.join("/")}; those dependency lines and metadata were omitted.`,
+    );
+  }
 
   let commonCoordinate: string;
   let fabricCoordinate: string;
@@ -152,19 +234,26 @@ export function buildGradleDeps(
       modId: metadataModId,
       versionNumber: version.version_number,
       depType,
+      platforms: supportedPlatforms,
     });
   }
 
   const commonFn = depType === "required" ? "modApi" : "modCompileOnly";
   const platformFn = depType === "required" ? "modImplementation" : "modCompileOnly";
+  const common =
+    supportedPlatforms.length === requestedPlatforms.length
+      ? [`${commonFn}("${commonCoordinate}")`]
+      : [];
+  const platformDependency = (platform: "fabric" | "forge" | "neoforge", coordinate: string) =>
+    supportedPlatforms.includes(platform) ? [`${platformFn}("${coordinate}")`] : [];
 
   return {
     repositories,
     dependencies: {
-      common: [`${commonFn}("${commonCoordinate}")`],
-      fabric: [`${platformFn}("${fabricCoordinate}")`],
-      forge: [`${platformFn}("${forgeCoordinate}")`],
-      neoforge: [`${platformFn}("${neoforgeCoordinate}")`],
+      common,
+      fabric: platformDependency("fabric", fabricCoordinate),
+      forge: platformDependency("forge", forgeCoordinate),
+      neoforge: platformDependency("neoforge", neoforgeCoordinate),
     },
     metadata,
     warnings,

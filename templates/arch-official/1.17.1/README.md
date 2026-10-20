@@ -16,7 +16,7 @@ CN mirrors (if present):
 ./gradlew --init-script gradle/init-mirrors.gradle build
 ```
 
-Merge `gradle/arch-template-deps.gradle.kts` into build files when present.
+Merge `gradle/arch-template-deps.gradle` into build files when present.
 
 
 > Normalized skeleton for the Architectury official `1.19.2-forge-fabric` generator entry

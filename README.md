@@ -79,7 +79,7 @@ const { buffer, warnings } = await generateZip(options);
 
 ## Known gaps
 
-- Template Gradle files are **lean skeletons** (not a full Loom-ready copy of hexdummy); enough for rename/zip tests and further wiring. Vendored official versions use that same skeleton with per-version pins.
+- Maintained **1.20.1** and **1.21.1** bases are real Loom projects and are smoke-built from generated output. The vendored `arch-official` entries remain normalized skeletons with per-version pins.
 - CurseForge is stubbed.
 - Modrinth maven metadata id is guessed from slug when no coord override exists.
 - Upstream `architectury-templates` has no 1.21+ NeoForge generator entry. 1.21.1 is the maintained Fabric+NeoForge base.

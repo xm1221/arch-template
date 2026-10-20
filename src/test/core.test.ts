@@ -10,6 +10,41 @@ import { listBases, resolveBaseDir } from "../templates.js";
 import { generateZip, loadPreset } from "../generate.js";
 import type { GenerateOptions } from "../options.js";
 
+async function withHexCastingApi<T>(run: () => Promise<T>): Promise<T> {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.endsWith("/project/hex-casting")) {
+      return new Response(
+        JSON.stringify({
+          id: "hexcasting-project",
+          slug: "hex-casting",
+          title: "Hex Casting",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (url.endsWith("/version/0.11.4")) {
+      return new Response(
+        JSON.stringify({
+          id: "hexcasting-0.11.4",
+          project_id: "hexcasting-project",
+          version_number: "0.11.4",
+          game_versions: ["1.20.1"],
+          loaders: ["fabric", "forge"],
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    throw new Error(`Unexpected network request in test: ${url}`);
+  }) as typeof fetch;
+  try {
+    return await run();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 describe("validate", () => {
   it("accepts a normal modId", () => {
     validateModId("hexconstruct");
@@ -60,6 +95,27 @@ describe("coords", () => {
     assert.ok(plan.dependencies.common[0].includes("at.petra-k.hexcasting"));
     assert.ok(plan.repositories.some((r) => r.includes("hexxy.media")));
   });
+
+  it("does not emit dependencies for unsupported platforms", () => {
+    const plan = buildGradleDeps(
+      { id: "fabric-only", slug: "fabric-only", title: "Fabric Only" },
+      {
+        id: "version",
+        project_id: "fabric-only",
+        version_number: "1.0.0",
+        loaders: ["fabric"],
+      },
+      {
+        minecraftVersion: "1.20.1",
+        platforms: ["fabric", "forge"],
+      },
+    );
+    assert.equal(plan.dependencies.fabric.length, 1);
+    assert.equal(plan.dependencies.forge.length, 0);
+    assert.equal(plan.dependencies.common.length, 0);
+    assert.deepEqual(plan.metadata[0]?.platforms, ["fabric"]);
+    assert.ok(plan.warnings.some((warning) => /does not support forge/i.test(warning)));
+  });
 });
 
 describe("templates", () => {
@@ -73,6 +129,11 @@ describe("templates", () => {
     assert.equal(arch?.kind, "arch-official");
     const custom = await resolveBaseDir("1.20.1");
     assert.equal(custom.kind, "custom");
+  });
+
+  it("rejects preset path traversal", async () => {
+    await assert.rejects(loadPreset("../plain-1.20.1-kt"), ValidationError);
+    await assert.rejects(loadPreset("..\\plain-1.20.1-kt"), ValidationError);
   });
 });
 
@@ -135,6 +196,21 @@ describe("generateZip", () => {
     assert.match(settings, /archstub/);
     assert.ok(Object.keys(zip.files).some((n) => n.endsWith(".java")));
   });
+
+  it("escapes displayName in JSON and TOML metadata", async () => {
+    const opts = await loadPreset("plain-1.20.1-kt");
+    opts.displayName = 'Quote "Mod" \\ Path';
+    const { buffer } = await generateZip(opts);
+    const zip = await JSZip.loadAsync(buffer);
+    const lang = await zip
+      .file("examplemod/common/src/main/resources/assets/examplemod/lang/en_us.json")!
+      .async("string");
+    assert.equal(JSON.parse(lang)["mod.examplemod"], opts.displayName);
+    const modsToml = await zip
+      .file("examplemod/forge/src/main/resources/META-INF/mods.toml")!
+      .async("string");
+    assert.match(modsToml, /displayName = "Quote \\"Mod\\" \\\\ Path"/);
+  });
 });
 
 describe("gradle completeness", () => {
@@ -147,13 +223,15 @@ describe("gradle completeness", () => {
     assert.match(fabric, /platformSetupLoomIde/);
     assert.match(fabric, /fabric\(\)/);
     assert.match(forge, /forge\(\)/);
+    assert.match(forge, /sourcesJar\s*\{[\s\S]*duplicatesStrategy = DuplicatesStrategy\.EXCLUDE/);
     // Explicit loom runs — Gradle task runClient / IDE "Fabric Client"
     assert.match(fabric, /runs\s*\{[\s\S]*client\s*\{/);
     assert.match(fabric, /setConfigName\("Fabric Client"\)/);
     assert.match(forge, /setConfigName\("Forge Client"\)/);
+    assert.match(forge, /"file": \[jarVersion: project\.version\]/);
     assert.doesNotMatch(fabric, /placeholder/i);
     const wrapper = await zip.file("examplemod/gradle/wrapper/gradle-wrapper.properties")!.async("string");
-    assert.match(wrapper, /services\.gradle\.org\/distributions\/gradle-8\.4-bin\.zip/);
+    assert.match(wrapper, /services\.gradle\.org\/distributions\/gradle-8\.13-bin\.zip/);
     assert.ok(zip.file("examplemod/gradlew"));
   });
 
@@ -163,12 +241,12 @@ describe("gradle completeness", () => {
     const { buffer } = await generateZip(opts);
     const zip = await JSZip.loadAsync(buffer);
     const wrapper = await zip.file("examplemod/gradle/wrapper/gradle-wrapper.properties")!.async("string");
-    assert.match(wrapper, /mirrors\.cloud\.tencent\.com\/gradle\/gradle-8\.4-bin\.zip/);
+    assert.match(wrapper, /mirrors\.cloud\.tencent\.com\/gradle\/gradle-8\.13-bin\.zip/);
   });
 
   it("hex-addon preset injects Hex Casting into fabric/forge gradle deps", async () => {
     const opts = await loadPreset("hex-addon-1.20.1-kt");
-    const { buffer } = await generateZip(opts);
+    const { buffer } = await withHexCastingApi(() => generateZip(opts));
     const zip = await JSZip.loadAsync(buffer);
     const common = await zip.file("hexexample/common/build.gradle")!.async("string");
     const fabric = await zip.file("hexexample/fabric/build.gradle")!.async("string");

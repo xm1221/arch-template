@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
 import JSZip from "jszip";
 import type { GenerateOptions, GenerateResult } from "./options.js";
-import { validateOptions } from "./validate.js";
+import { validateOptions, validatePresetId } from "./validate.js";
 import { listBases, resolveBaseDir } from "./templates.js";
 import {
   applyConditionals,
@@ -195,6 +195,9 @@ function patchFabricDepends(jsonText: string, plan: GradleDepPlan): string {
     const data = JSON.parse(jsonText) as { depends?: Record<string, string> };
     data.depends ??= {};
     for (const meta of plan.metadata) {
+      if (!meta.platforms.includes("fabric")) {
+        continue;
+      }
       if (meta.depType === "required") {
         data.depends[meta.modId] = `>=${meta.versionNumber}`;
       } else if (meta.depType === "optional") {
@@ -207,9 +210,17 @@ function patchFabricDepends(jsonText: string, plan: GradleDepPlan): string {
   }
 }
 
-function patchModsToml(toml: string, plan: GradleDepPlan, modId: string): string {
+function patchModsToml(
+  toml: string,
+  plan: GradleDepPlan,
+  modId: string,
+  platform: "forge" | "neoforge",
+): string {
   let out = toml;
   for (const meta of plan.metadata) {
+    if (!meta.platforms.includes(platform)) {
+      continue;
+    }
     out += `
 [[dependencies.${modId}]]
 modId = "${meta.modId}"
@@ -226,6 +237,7 @@ export async function loadPreset(
   presetId: string,
   presetsRoot?: string,
 ): Promise<GenerateOptions> {
+  validatePresetId(presetId);
   const root =
     presetsRoot ??
     resolve(fileURLToPath(new URL("../presets", import.meta.url)));
@@ -238,10 +250,7 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
   validateOptions(options);
   const warnings: string[] = [];
 
-  const bases = await listBases();
   const baseInfo = await resolveBaseDir(options.base);
-  // Soft check against list (resolveBaseDir already throws if missing)
-  void bases;
 
   const recipes = options.recipes ?? {};
   const placeholders = buildPlaceholderMap(options, baseInfo.meta);
@@ -256,11 +265,16 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
       throw new Error(`Unsupported dependency source: ${dep.source}`);
     }
     const project = await fetchProject(dep.project);
-    const version = await fetchVersion(dep.project, dep.version);
+    const version = await fetchVersion(dep.project, dep.version, {
+      projectId: project.id,
+      minecraftVersion: baseInfo.meta.minecraft,
+      loaders: baseInfo.meta.platforms,
+    });
     plans.push(
       buildGradleDeps(project, version, {
         minecraftVersion: baseInfo.meta.minecraft,
         depType: dep.depType,
+        platforms: baseInfo.meta.platforms,
       }),
     );
   }
@@ -272,11 +286,16 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
     if (!hasHex) {
       try {
         const project = await fetchProject("hex-casting");
-        const version = await fetchVersion("hex-casting", "0.11.4");
+        const version = await fetchVersion("hex-casting", "0.11.4", {
+          projectId: project.id,
+          minecraftVersion: baseInfo.meta.minecraft,
+          loaders: baseInfo.meta.platforms,
+        });
         plans.push(
           buildGradleDeps(project, version, {
             minecraftVersion: baseInfo.meta.minecraft,
             depType: "required",
+            platforms: baseInfo.meta.platforms,
           }),
         );
       } catch (err) {
@@ -290,8 +309,13 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
               id: "offline",
               project_id: "hexcasting",
               version_number: "0.11.4",
+              loaders: baseInfo.meta.platforms,
             },
-            { minecraftVersion: baseInfo.meta.minecraft, depType: "required" },
+            {
+              minecraftVersion: baseInfo.meta.minecraft,
+              depType: "required",
+              platforms: baseInfo.meta.platforms,
+            },
           ),
         );
       }
@@ -322,21 +346,15 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
       }
 
       if (rel.endsWith("fabric.mod.json") && depPlan.metadata.length) {
-        text = patchFabricDepends(text, {
-          ...depPlan,
-          metadata: depPlan.metadata.map((m) => ({
-            ...m,
-            // already expanded mod ids
-          })),
-        });
+        text = patchFabricDepends(text, depPlan);
         // patchFabricDepends re-stringifies; placeholders in other fields already expanded
       }
       if (
         (rel.endsWith("mods.toml") || rel.endsWith("neoforge.mods.toml")) &&
         depPlan.metadata.length
       ) {
-        // deps were appended with __MOD_ID__ before expand — re-expand
-        text = patchModsToml(text, depPlan, options.modId);
+        const platform = rel.endsWith("neoforge.mods.toml") ? "neoforge" : "forge";
+        text = patchModsToml(text, depPlan, options.modId, platform);
       }
 
       zip.file(rootPrefix + rel, text);
@@ -357,7 +375,7 @@ export async function generateZip(options: GenerateOptions): Promise<GenerateRes
   }
 
   if (depPlan.repositories.length || depPlan.dependencies.common.length) {
-    zip.file(rootPrefix + "gradle/arch-template-deps.gradle.kts", renderDepsSnippet(depPlan));
+    zip.file(rootPrefix + "gradle/arch-template-deps.gradle", renderDepsSnippet(depPlan));
   }
 
   if (options.mirrors?.enabled && options.mirrors.preset === "cn-campus") {

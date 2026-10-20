@@ -25,7 +25,7 @@ const TINY_PNG = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAD0lEQVR4nGPwmn
 
 function assertZip(buffer: ArrayBuffer | Uint8Array, modId: string): Promise<void> {
   return JSZip.loadAsync(buffer).then(async (zip) => {
-    const settingsName = `${modId}/settings.gradle.kts`;
+    const settingsName = `${modId}/settings.gradle`;
     const settings = await zip.file(settingsName)?.async("string");
     assert.ok(settings, `missing ${settingsName}`);
     assert.match(settings, new RegExp(`rootProject\\.name = "${modId}"`));
